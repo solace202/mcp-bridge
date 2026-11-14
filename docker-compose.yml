@@ -1,0 +1,40 @@
+name: mcp-bridge
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: shop
+      POSTGRES_USER: shop
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-shop}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "127.0.0.1:${POSTGRES_HOST_PORT:-5432}:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U shop -d shop"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  app:
+    build: .
+    image: mcp-bridge:latest
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/shop
+      DB_USER: shop
+      DB_PASSWORD: ${DB_PASSWORD:-shop}
+      # Set real keys in .env; the defaults only work for local demos.
+      MCP_ADMIN_KEY: ${MCP_ADMIN_KEY:-dev-support-key-change-me}
+      MCP_READONLY_KEY: ${MCP_READONLY_KEY:-dev-analyst-key-change-me}
+      SHOP_API_TOKEN: ${SHOP_API_TOKEN:-dev-shop-token-change-me}
+      BRIDGE_BACKEND: ${BRIDGE_BACKEND:-local}
+      MCP_PROTOCOL: ${MCP_PROTOCOL:-STREAMABLE}
+    ports:
+      - "127.0.0.1:${APP_HOST_PORT:-8080}:8080"
+
+volumes:
+  pgdata:

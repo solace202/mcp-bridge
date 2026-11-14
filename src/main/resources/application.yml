@@ -1,0 +1,83 @@
+server:
+  port: ${PORT:8080}
+  shutdown: graceful
+
+spring:
+  application:
+    name: mcp-bridge
+  threads:
+    virtual:
+      enabled: true
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/shop}
+    username: ${DB_USER:shop}
+    password: ${DB_PASSWORD:shop}
+    hikari:
+      maximum-pool-size: 10
+  jackson:
+    default-property-inclusion: non_null
+  ai:
+    mcp:
+      server:
+        name: shop-mcp-bridge
+        version: 0.1.0
+        type: SYNC
+        # STREAMABLE = Streamable HTTP on /mcp (current spec). Set MCP_PROTOCOL=SSE for the legacy /sse transport.
+        protocol: ${MCP_PROTOCOL:STREAMABLE}
+        instructions: >
+          Tools for a small online coffee-gear shop: orders, customers, inventory and sales. Money is USD, times UTC.
+          Writes (refunds, stock adjustments) are two-phase: call prepare_*, show the summary to the user, and only
+          call confirm_action after they explicitly approve.
+        request-timeout: 30s
+        capabilities:
+          tool: true
+          resource: true
+          prompt: true
+          completion: false
+        streamable-http:
+          mcp-endpoint: /mcp
+          keep-alive-interval: 25s
+
+shop:
+  # Service token of the (simulated) existing shop API under /api/shop. Empty = open.
+  api-token: ${SHOP_API_TOKEN:dev-shop-token-change-me}
+
+bridge:
+  backend:
+    type: ${BRIDGE_BACKEND:local}            # local = shop database, rest = shop HTTP API
+    base-url: ${SHOP_API_URL:http://localhost:${server.port}}
+    token: ${SHOP_API_TOKEN:dev-shop-token-change-me}
+    timeout: 5s
+  guardrails:
+    max-refund-usd: ${MAX_REFUND_USD:500.00}
+    max-stock-adjustment: 100
+    confirmation-ttl: 5m
+  security:
+    keys:
+      - name: ${MCP_ADMIN_KEY_NAME:support-agent}
+        key: ${MCP_ADMIN_KEY:dev-support-key-change-me}
+        scopes: [read, write]
+      - name: ${MCP_READONLY_KEY_NAME:analyst}
+        key: ${MCP_READONLY_KEY:dev-analyst-key-change-me}
+        scopes: [read]
+    allowed-origins: ${MCP_ALLOWED_ORIGINS:}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      probes:
+        enabled: true
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+  api-docs:
+    path: /v3/api-docs
+
+logging:
+  level:
+    dev.mcpbridge: INFO

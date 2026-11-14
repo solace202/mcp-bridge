@@ -1,0 +1,229 @@
+{
+  "model": "kimi-k3",
+  "server": "http://localhost:8085/mcp",
+  "started": "2026-11-14 20:32:51 CST",
+  "tools": [
+    {
+      "name": "cancel_action",
+      "title": "Cancel a prepared action",
+      "description": "Discards a prepared action the user did not approve.",
+      "readOnly": false,
+      "destructive": false,
+      "params": [
+        "token"
+      ],
+      "required": [
+        "token"
+      ]
+    },
+    {
+      "name": "confirm_action",
+      "title": "Confirm a prepared action",
+      "description": "Step 2 of 2: executes an action returned by prepare_refund or prepare_stock_adjustment.\nOnly call this after the user explicitly approved the summary. Tokens expire after a few minutes,\nwork once, and only for the API key that prepared them.",
+      "readOnly": false,
+      "destructive": true,
+      "params": [
+        "token"
+      ],
+      "required": [
+        "token"
+      ]
+    },
+    {
+      "name": "list_pending_actions",
+      "title": "List pending actions",
+      "description": "Actions this API key prepared that are still waiting for confirmation.",
+      "readOnly": true,
+      "destructive": true,
+      "params": [],
+      "required": []
+    },
+    {
+      "name": "prepare_refund",
+      "title": "Prepare a refund",
+      "description": "Step 1 of 2 for refunding an order. Checks the amount against what is still refundable and the\nper-refund limit, then returns a confirmation token and a summary. Does NOT move money.\nShow the summary to the user; only after they clearly approve, call confirm_action with the token.",
+      "readOnly": false,
+      "destructive": false,
+      "params": [
+        "orderId",
+        "amountUsd",
+        "reason"
+      ],
+      "required": [
+        "orderId",
+        "amountUsd",
+        "reason"
+      ]
+    },
+    {
+      "name": "prepare_stock_adjustment",
+      "title": "Prepare a stock adjustment",
+      "description": "Step 1 of 2 for correcting stock (positive delta = add units, negative = remove). Checks the SKU,\nthe per-adjustment limit and that stock cannot go below zero, then returns a confirmation token.\nDoes NOT change stock until confirm_action is called after the user approves.",
+      "readOnly": false,
+      "destructive": false,
+      "params": [
+        "sku",
+        "delta",
+        "reason"
+      ],
+      "required": [
+        "sku",
+        "delta",
+        "reason"
+      ]
+    },
+    {
+      "name": "check_inventory",
+      "title": "Check inventory",
+      "description": "Stock levels by SKU with reorder level, a lowStock flag and units sold in the last 30 days.\nLow-stock items are listed first. Filter by SKU/name text, category, or lowStockOnly.",
+      "readOnly": true,
+      "destructive": true,
+      "params": [
+        "query",
+        "category",
+        "lowStockOnly",
+        "limit"
+      ],
+      "required": []
+    },
+    {
+      "name": "find_customers",
+      "title": "Find customers",
+      "description": "Find customers by part of their name or email. Returns order count, lifetime value (USD, net of refunds) and last order time.",
+      "readOnly": true,
+      "destructive": true,
+      "params": [
+        "query",
+        "limit"
+      ],
+      "required": [
+        "query"
+      ]
+    },
+    {
+      "name": "get_order",
+      "title": "Get order",
+      "description": "One order with customer, line items, refunds so far and the amount that can still be refunded (USD).",
+      "readOnly": true,
+      "destructive": true,
+      "params": [
+        "orderId"
+      ],
+      "required": [
+        "orderId"
+      ]
+    },
+    {
+      "name": "sales_summary",
+      "title": "Sales summary",
+      "description": "Orders, revenue, refunds, average order value, orders by status and the top 5 products for the last N days (USD).",
+      "readOnly": true,
+      "destructive": true,
+      "params": [
+        "days"
+      ],
+      "required": []
+    },
+    {
+      "name": "search_orders",
+      "title": "Search orders",
+      "description": "Search shop orders, newest first. All filters are optional and combine with AND.\nReturns id, status, customer, line count, total and refunded amount (USD) and creation time (UTC).\nUse get_order for line items and refund history.",
+      "readOnly": true,
+      "destructive": true,
+      "params": [
+        "customer",
+        "status",
+        "fromDate",
+        "toDate",
+        "minTotalUsd",
+        "limit"
+      ],
+      "required": []
+    }
+  ],
+  "events": [
+    {
+      "type": "user",
+      "text": "Olivia Dubois (olivia.dubois48@example.com) says one of the two titanium hand grinders in her recent order arrived with a cracked handle. Find the order and refund that one grinder. Also tell me whether we need to reorder that grinder."
+    },
+    {
+      "type": "tool",
+      "name": "find_customers",
+      "arguments": {
+        "query": "olivia.dubois48@example.com"
+      },
+      "isError": false,
+      "result": "[{\"id\":48,\"name\":\"Olivia Dubois\",\"email\":\"olivia.dubois48@example.com\",\"country\":\"US\",\"orders\":13,\"lifetimeValueUsd\":3579.90,\"lastOrderAt\":\"2026-11-07T08:57:00Z\"}]",
+      "ms": 20
+    },
+    {
+      "type": "tool",
+      "name": "search_orders",
+      "arguments": {
+        "customer": "olivia.dubois48",
+        "limit": 10
+      },
+      "isError": false,
+      "result": "[{\"id\":10478,\"status\":\"DELIVERED\",\"customerName\":\"Olivia Dubois\",\"customerEmail\":\"olivia.dubois48@example.com\",\"lineCount\":3,\"totalUsd\":583.00,\"refundedUsd\":0.00,\"createdAt\":\"2026-11-07T08:57:00Z\"},{\"id\":10314,\"status\":\"DELIVERED\",\"customerName\":\"Olivia Dubois\",\"customerEmail\":\"olivia.dubois48@example.com\",\"lineCount\":1,\"totalUsd\":658.00,\"refundedUsd\":0.00,\"createdAt\":\"2026-11-02T00:02:00Z\"},{\"id\":10506,\"status\":\"DELIVERED\",\"customerName\":\"Olivia Dubois\",\"customerEmail\":\"olivia.dubois48@example.com\",\"lineCount\":1,\"totalUsd\":658.00,\"refundedUsd\":0.00,\"createdAt\":\"2026-10-26T12:13:00Z\"},{\"id\":10321,\"status\":\"DELIVERED\",\"customerName\":\"Olivia Dubois\",\"customerEmail\":\"olivia.dubois48@example.com\",\"lineCount\":2,\"totalUsd\":153.00,\"refundedUsd\":0.00,\"createdAt\":\"2026-10-17T15:35:00Z\"},{\"id\":10491,\"status\":\"DELIVERED\",\"customerName\":\"Olivia Dubois\",\"customerEmail\":\"olivia.dubois48@example.com\",\"lineCount\":1,\"totalUsd\":699.00,\"refundedUsd\":0.00,\"createdAt\":\"2026-10-17T01:35:00Z\"},{\"id\":10272,\"status\":\"DELIVERED\",\"customerName\":\"Olivia Dubois\",\"customerEmail\":\"olivia.dubois48@example.com\",\"lineCount\":1,\"totalUsd\":36.00,\"refundedUsd\":0.00,\"createdAt\":\"2026-10-16T07:26:00Z\"},{\"id\":10369,\"status\":\"DELIVERED\",\"customerName\":\"Olivia Dubois\",\"customerEmail\":\"olivia.dubois48@example.com\",\"lineCount\":2,\"totalUsd\":66.00,\"refundedUsd\":0.00,\"createdAt\":\"2026-10-10T22:34:00Z\"},{\"id\":10229,\"status\":\"DELIVERED\",\"customerName\":\"Olivia Dubois\",\"customerEmail\":\"olivia.dubois48@example.com\",\"lineCount\":3,\"totalUsd\":136.90,\"refundedUsd\":0.00,\"createdAt\":\"2026-09-25T19:36:00Z\"},{\"id\":10422,\"status\":\"DELIVERED\",\"customerName\":\"Olivia Dubois\",\"customerEmail\":\"olivia.dubois48@example.com\",\"lineCount\":1,\"totalUsd\":89.00,\"refundedUsd\":0.00,\"createdAt\":\"2026-09-19T16:42:00Z\"},{\"id\":10416,\"status\":\"DELIVERED\",\"customerName\":\"Olivia Dubois\",\"customerEmail\":\"olivia.dubois48@example.com\",\"lineCount\":1,\"totalUsd\":15.00,\"refundedUsd\":0.00,\"createdAt\":\"2026-09-17T09:02:00Z\"}]",
+      "ms": 11
+    },
+    {
+      "type": "tool",
+      "name": "get_order",
+      "arguments": {
+        "orderId": 10478
+      },
+      "isError": false,
+      "result": "{\"id\":10478,\"status\":\"DELIVERED\",\"customer\":{\"id\":48,\"name\":\"Olivia Dubois\",\"email\":\"olivia.dubois48@example.com\",\"country\":\"US\"},\"lines\":[{\"sku\":\"GR-100\",\"product\":\"Burr Grinder Pro 64mm\",\"quantity\":1,\"unitPriceUsd\":249.00,\"lineTotalUsd\":249.00},{\"sku\":\"GR-110\",\"product\":\"Hand Grinder Titanium\",\"quantity\":2,\"unitPriceUsd\":159.00,\"lineTotalUsd\":318.00},{\"sku\":\"AC-630\",\"product\":\"Paper Filters 100pk\",\"quantity\":2,\"unitPriceUsd\":8.00,\"lineTotalUsd\":16.00}],\"totalUsd\":583.00,\"refundedUsd\":0.00,\"refundableUsd\":583.00,\"refunds\":[],\"createdAt\":\"2026-11-07T08:57:00Z\"}",
+      "ms": 22
+    },
+    {
+      "type": "tool",
+      "name": "check_inventory",
+      "arguments": {
+        "query": "GR-110"
+      },
+      "isError": false,
+      "result": "[{\"sku\":\"GR-110\",\"name\":\"Hand Grinder Titanium\",\"category\":\"Grinders\",\"priceUsd\":159.00,\"stock\":3,\"reorderLevel\":5,\"lowStock\":true,\"soldLast30Days\":21}]",
+      "ms": 15
+    },
+    {
+      "type": "tool",
+      "name": "prepare_refund",
+      "arguments": {
+        "amountUsd": 159.0,
+        "orderId": 10478,
+        "reason": "One of two Hand Grinder Titanium (GR-110) arrived with a cracked handle"
+      },
+      "isError": false,
+      "result": "{\"token\":\"act_SW3VNB2TNjh6ajRhRbmH4J\",\"action\":\"refund\",\"summary\":\"Refund 159.00 USD on order #10478 (Olivia Dubois, olivia.dubois48@example.com; order total 583.00, already refunded 0.00). Reason: One of two Hand Grinder Titanium (GR-110) arrived with a cracked handle\",\"expiresAt\":\"2026-11-14T12:38:04.208295Z\",\"next\":\"Show this summary to the user and wait for an explicit yes. Then call confirm_action with the token. The token expires in 5 minutes and works once. Call cancel_action if the user declines.\"}",
+      "ms": 22
+    },
+    {
+      "type": "assistant",
+      "text": "Here's the summary:\n\n**Refund (needs your approval):**\n- Order **#10478** (Olivia Dubois, delivered Nov 7)\n- Refund **$159.00** — one Hand Grinder Titanium (GR-110), cracked handle\n- Order total $583.00, nothing refunded yet\n\n**Reorder status for GR-110 (Hand Grinder Titanium):**\n- **Yes, we need to reorder.** Stock is **3 units** against a reorder level of **5** (already flagged low stock), and it's selling well — 21 units sold in the last 30 days.\n\nReply **yes** to confirm the $159.00 refund."
+    },
+    {
+      "type": "user",
+      "text": "Yes, approved. Go ahead with the refund."
+    },
+    {
+      "type": "tool",
+      "name": "confirm_action",
+      "arguments": {
+        "token": "act_SW3VNB2TNjh6ajRhRbmH4J"
+      },
+      "isError": false,
+      "result": "{\"token\":\"act_SW3VNB2TNjh6ajRhRbmH4J\",\"action\":\"refund\",\"status\":\"CONFIRMED\",\"summary\":\"Refund 159.00 USD on order #10478 (Olivia Dubois, olivia.dubois48@example.com; order total 583.00, already refunded 0.00). Reason: One of two Hand Grinder Titanium (GR-110) arrived with a cracked handle\",\"result\":{\"refundId\":17,\"orderId\":10478,\"amountUsd\":159.00,\"refundedTotalUsd\":159.00,\"orderStatus\":\"PARTIALLY_REFUNDED\"}}",
+      "ms": 34
+    },
+    {
+      "type": "assistant",
+      "text": "Done. Refund confirmed:\n\n- **$159.00** refunded on order **#10478** (refund ID 17)\n- Order status is now **PARTIALLY_REFUNDED** ($159.00 of $583.00)\n\nReminder: GR-110 (Hand Grinder Titanium) is below reorder level — **3 in stock vs. reorder level 5**, with 21 sold in the last 30 days. Worth placing a restock order soon."
+    }
+  ],
+  "serverInfo": {
+    "name": "shop-mcp-bridge",
+    "version": "0.1.0"
+  }
+}

@@ -1,0 +1,16 @@
+# STDIO transport for Claude Desktop / Cursor launching the jar as a subprocess.
+# stdout carries JSON-RPC, so nothing else may be printed there: no banner, no console logging.
+spring:
+  main:
+    web-application-type: none
+    banner-mode: off
+  ai:
+    mcp:
+      server:
+        stdio: true
+
+logging:
+  threshold:
+    console: "OFF"
+  file:
+    name: ${MCP_LOG_FILE:${java.io.tmpdir}/mcp-bridge-stdio.log}
